@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Hello World</title>
+
+  <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+  <script>
+    $(function() {
+      var socket = new WebSocket('ws://localhost:8080/', 'echo-protocol');
+
+      socket.onmessage = function(evt) {
+        var data = evt.data;
+        console.log('WebSocket Echo: ' + data);
+      };
+
+      $('#btnWs').click(function() {
+        if(socket.readyState != 1) {
+          console.log('WebSocket readyState=' + socket.readyState);
+          return;
+        }
+
+        socket.send(new Date());
+      });
+
+      //////////////////////////////////////
+
+      $('#btnAjax').click(function() {
+        $.ajax('ajax.html', {
+          method: 'get',
+          data: {
+            'message': new Date().toString()
+          },
+          dataType: 'text',
+          success: function(data) {
+            console.log('Ajax Echo: ' + data);
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            console.log('Ajax Error: ' + errorThrown);
+          }
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+  <h1>AJAX and WebSocket Test</h1>
+
+  <button id="btnAjax">AJAX</button>
+  <button id="btnWs">WebSocket</button>
+</body>
+</html>
