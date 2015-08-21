@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>AJAX and WebSocket Test</title>
+  <script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+  <script src="client.js"></script>
+  <style>
+    html {
+      height: 100%;
+    }
+
+    body {
+      font-size: 12px;
+      margin: 8px;
+      padding: 0;
+      height: calc(100% - 20px);
+    }
+
+    section {
+      margin-top: 1em;
+    }
+
+    h1 {
+      border-bottom: 1px solid #ccc;
+      font-size: 160%;
+    }
+
+    #secTouchPanel {
+      height: calc(100% - 120px);
+    }
+
+    #touchPanel {
+      background-color: #ccc;
+      width: 100%;
+      height: 100%;
+      border: 2px solid #aaa;
+      box-sizing: border-box;
+    }
+
+    button {
+      font-size: 120%;
+      padding: 0.2em 7px;
+    }
+
+    button::-moz-focus-inner {
+      padding: 0.2em 7px;
+    }
+
+    #secKeyboard {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>AJAX and WebSocket Test</h1>
+
+  <section id="secButtons">
+    <button id="btnAjax">AJAX</button>
+    <button id="btnWs">WebSocket</button>
+  </section>
+
+  <section id="secTouchPanel">
+    <div id="touchPanel"></div>
+  </section>
+
+  <section id="secKeyboard">
+    <button>↑</button>
+    <button>↓</button>
+    <button>←</button>
+    <button>→</button>
+    <button>Back</button>
+    <button>Ok</button>
+  </section>
+</body>
+</html>

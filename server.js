@@ -1,8 +1,9 @@
-var ip   = "127.0.0.1";
 var port = 8080;
 
+var public_dir = './public';
 var whitelist = [
-  '/client.html'
+  '/client.html',
+  '/client.js'
 ];
 
 var http = require('http');
@@ -16,8 +17,8 @@ function onRequest(request, response) {
   if(url.pathname == '/ajax.html') {
     response.writeHead(200, {"Content-Type": "text/html"});
     response.write(JSON.stringify(url.query));
-  } else if(whitelist.indexOf(url.pathname) != -1 && fs.existsSync('.' + url.pathname)) {
-    var file = fs.readFileSync('.' + url.pathname, {
+  } else if(whitelist.indexOf(url.pathname) != -1 && fs.existsSync(public_dir + url.pathname)) {
+    var file = fs.readFileSync(public_dir + url.pathname, {
       encoding: 'utf8'
     });
 
@@ -33,7 +34,7 @@ function onRequest(request, response) {
   response.end();
 }
 
-var server = http.createServer(onRequest).listen(port, ip);
+var server = http.createServer(onRequest).listen(port);
 
 wsServer = new WebSocketServer({
   httpServer: server,
