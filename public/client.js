@@ -39,9 +39,9 @@ $(function() {
     var CLICK_TIME_THRESHOLD = 200;
     var CLICK_MOVE_THRESHOLD = 5;
 
-    var startTime = 0, waitForClick = false;
+    var waitForClickTimer, identifier;
     var startX, startY, panelX, panelY, panelWidth, panelHeight;
-    var identifier = undefined, prevDx, prevDy;
+    var prevDx, prevDy, hasMouseDown;
 
     var $touchPanel = $('#touchPanel');
 
@@ -50,10 +50,11 @@ $(function() {
         if (evt.button != 0) {
           return true;
         }
+        hasMouseDown = true;
         return onStart(evt.clientX, evt.clientY);
       })
       .mousemove(function(evt) {
-        if (! startTime) {
+        if (! hasMouseDown) {
           return true;
         }
         return onMove(evt.clientX, evt.clientY);
@@ -62,6 +63,7 @@ $(function() {
         if (evt.button != 0) {
           return true;
         }
+        hasMouseDown = false;
         return onEnd(evt.clientX, evt.clientY);
       })
       .bind('touchstart', function(evt) {
@@ -76,7 +78,7 @@ $(function() {
         identifier = touch.identifier;
         return onStart(touch.pageX - panelX, touch.pageY - panelY);
       })
-      .bind('touchmove', function(evt) {
+      .bind('touchmove touchend', function(evt) {
         var touches = evt.originalEvent.changedTouches;
         var touch = Array.from(touches).find(function(elem) {
           return elem.identifier == identifier;
@@ -84,18 +86,13 @@ $(function() {
         if (!touch) {
           return false;
         }
+
+        if (evt.type == 'touchend') {
+          identifier = undefined;
+          return onEnd(touch.pageX - panelX, touch.pageY - panelY);
+        }
+
         return onMove(touch.pageX - panelX, touch.pageY - panelY);
-      })
-      .bind('touchend', function(evt) {
-        var touches = evt.originalEvent.changedTouches;
-        var touch = Array.from(touches).find(function(elem) {
-          return elem.identifier == identifier;
-        });
-        if (!touch) {
-          return false;
-        }
-        identifier = undefined;
-        return onEnd(touch.pageX - panelX, touch.pageY - panelY);
       });
 
     $(window).resize(function() {
@@ -106,12 +103,14 @@ $(function() {
     }).triggerHandler('resize');
 
     function onStart(x, y) {
-      startTime = Date.now();
-      waitForClick = true;
       startX = x;
       startY = y;
-      prevDx = undefined;
-      prevDy = undefined;
+
+      waitForClickTimer = setTimeout(function() {
+        waitForClickTimer = null;
+        handleTouch('start', 0, 0);
+      }, CLICK_TIME_THRESHOLD);
+
       return false;
     }
 
@@ -119,13 +118,13 @@ $(function() {
       var dx = x - startX;
       var dy = y - startY;
 
-      if (waitForClick) {
-        if (Date.now() - startTime <= CLICK_TIME_THRESHOLD &&
-            Math.abs(dx) <= CLICK_MOVE_THRESHOLD &&
+      if (waitForClickTimer) {
+        if (Math.abs(dx) <= CLICK_MOVE_THRESHOLD &&
             Math.abs(dy) <= CLICK_MOVE_THRESHOLD) {
           return false;
         }
-        waitForClick = false;
+        clearTimeout(waitForClickTimer);
+        waitForClickTimer = null;
         handleTouch('start', 0, 0);
       }
 
@@ -137,20 +136,22 @@ $(function() {
       var dx = x - startX;
       var dy = y - startY;
 
-      if (waitForClick) {
-        if (Date.now() - startTime <= CLICK_TIME_THRESHOLD) {
-          handleTouch('click');
-        }
+      if (waitForClickTimer) {
+        clearTimeout(waitForClickTimer);
+        waitForClickTimer = null;
+        handleTouch('click');
       } else {
         handleTouch('end', dx, dy);
       }
 
-      startTime = 0;
       return false;
     }
 
     function handleTouch(type, dx, dy) {
-      if (type == 'move' && dx === prevDx && dy === prevDy) {
+      if (type == 'start') {
+        prevDx = undefined;
+        prevDy = undefined;
+      } else if (type == 'move' && dx === prevDx && dy === prevDy) {
         return;
       }
 
