@@ -16,7 +16,7 @@ function onRequest(request, response) {
 
   if(url.pathname == '/ajax.html') {
     response.writeHead(200, {"Content-Type": "text/html"});
-    response.write(JSON.stringify(url.query));
+    response.write(url.query.message);
   } else if(whitelist.indexOf(url.pathname) != -1 && fs.existsSync(public_dir + url.pathname)) {
     var file = fs.readFileSync(public_dir + url.pathname, {
       encoding: 'utf8'

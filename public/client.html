@@ -48,6 +48,10 @@
       padding: 0.2em 7px;
     }
 
+    #btnEcho {
+      margin-left: 1em;
+    }
+
     #secKeyboard {
       text-align: center;
     }
@@ -56,9 +60,10 @@
 <body>
   <h1>AJAX and WebSocket Test</h1>
 
-  <section id="secButtons">
-    <button id="btnAjax">AJAX</button>
-    <button id="btnWs">WebSocket</button>
+  <section id="secProtocol">
+    <label><input type="radio" name="protocol" value="socket" checked> WebSocket</label>
+    <label><input type="radio" name="protocol" value="ajax"> AJAX</label>
+    <button id="btnEcho">Echo Test</button>
   </section>
 
   <section id="secTouchPanel">

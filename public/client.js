@@ -28,33 +28,25 @@ $(function() {
 
   //////////////////////////////////////
 
-  var socket = new WebSocket('ws://localhost:8080/', 'echo-protocol');
-
-  socket.onmessage = function(evt) {
-    var data = evt.data;
-    console.log('WebSocket Echo: ' + data);
+  var protocols = {
+    socket: new WebSocket('ws://localhost:8080/', 'echo-protocol'),
+    ajax: new AJAX('ajax.html')
   };
 
-  $('#btnWs').click(function() {
-    if(socket.readyState != 1) {
-      console.log('WebSocket readyState=' + socket.readyState);
-      return;
-    }
-
-    socket.send(new Date());
+  $.each(protocols, function(key, value) {
+    value.onmessage = function(evt) {
+      var data = evt.data;
+      console.log(key + ' echo: ' + data);
+    };
   });
 
-  //////////////////////////////////////
-
-  var ajax = new AJAX('ajax.html');
-
-  ajax.onmessage = function(evt) {
-    var data = evt.data;
-    console.log('Ajax Echo: ' + data);
-  };
-
-  $('#btnAjax').click(function() {
-    ajax.send(new Date());
+  $('#btnEcho').click(function() {
+    var protocol = protocols[$('input[name="protocol"]:checked').val()];
+    if(protocol.readyState != 1) {
+      console.log('ERROR: readyState=' + socket.readyState);
+      return;
+    }
+    protocol.send(new Date());
   });
 
   /////////////////////////////////////
@@ -188,6 +180,7 @@ $(function() {
       };
 
       console.log(detail);
+      protocols[$('input[name="protocol"]:checked').val()].send(JSON.stringify(detail));
     }
   })();
 });
