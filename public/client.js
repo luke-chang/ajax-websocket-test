@@ -49,6 +49,15 @@ $(function() {
     protocol.send(new Date());
   });
 
+  $('#secKeyboard button').click(function(evt) {
+    var detail = {
+      type: 'keydown',
+      key: $(this).data('key')
+    };
+    console.log(detail);
+    protocols[$('input[name="protocol"]:checked').val()].send(JSON.stringify(detail));
+  });
+
   /////////////////////////////////////
 
   (function TouchPanel() {
