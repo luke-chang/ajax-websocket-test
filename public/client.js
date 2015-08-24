@@ -1,4 +1,33 @@
 $(function() {
+  function AJAX(url) {
+    this.url = url;
+    this.onmessage = null;
+    this.readyState = 1;
+  }
+
+  AJAX.prototype.send = function(message) {
+    var self = this;
+    $.ajax(self.url, {
+      method: 'get',
+      data: {
+        'message': message.toString()
+      },
+      dataType: 'text',
+      success: function(data) {
+        if (data && self.onmessage) {
+          self.onmessage({
+            data: data
+          });
+        }
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        console.log('Ajax Error: ' + errorThrown);
+      }
+    });
+  };
+
+  //////////////////////////////////////
+
   var socket = new WebSocket('ws://localhost:8080/', 'echo-protocol');
 
   socket.onmessage = function(evt) {
@@ -17,20 +46,15 @@ $(function() {
 
   //////////////////////////////////////
 
+  var ajax = new AJAX('ajax.html');
+
+  ajax.onmessage = function(evt) {
+    var data = evt.data;
+    console.log('Ajax Echo: ' + data);
+  };
+
   $('#btnAjax').click(function() {
-    $.ajax('ajax.html', {
-      method: 'get',
-      data: {
-        'message': new Date().toString()
-      },
-      dataType: 'text',
-      success: function(data) {
-        console.log('Ajax Echo: ' + data);
-      },
-      error: function(jqXHR, textStatus, errorThrown) {
-        console.log('Ajax Error: ' + errorThrown);
-      }
-    });
+    ajax.send(new Date());
   });
 
   /////////////////////////////////////
@@ -43,9 +67,7 @@ $(function() {
     var startX, startY, panelX, panelY, panelWidth, panelHeight;
     var prevDx, prevDy, hasMouseDown;
 
-    var $touchPanel = $('#touchPanel');
-
-    $touchPanel
+    $('#touchPanel')
       .mousedown(function(evt) {
         if (evt.button != 0) {
           return true;
@@ -86,16 +108,15 @@ $(function() {
         if (!touch) {
           return false;
         }
-
         if (evt.type == 'touchend') {
           identifier = undefined;
           return onEnd(touch.pageX - panelX, touch.pageY - panelY);
         }
-
         return onMove(touch.pageX - panelX, touch.pageY - panelY);
       });
 
     $(window).resize(function() {
+      var $touchPanel = $('#touchPanel');
       panelX = Math.round($touchPanel.offset().left);
       panelY = Math.round($touchPanel.offset().top);
       panelWidth = $touchPanel.width();
