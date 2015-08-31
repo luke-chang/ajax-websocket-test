@@ -51,7 +51,7 @@ $(function() {
 
   $('#secKeyboard button').click(function(evt) {
     var detail = {
-      type: 'keydown',
+      type: 'keypress',
       key: $(this).data('key')
     };
     console.log(detail);
@@ -130,7 +130,7 @@ $(function() {
 
       waitForClickTimer = setTimeout(function() {
         waitForClickTimer = null;
-        handleTouch('start', 0, 0);
+        handleTouch('touchstart', 0, 0);
       }, CLICK_TIME_THRESHOLD);
 
       return false;
@@ -147,10 +147,10 @@ $(function() {
         }
         clearTimeout(waitForClickTimer);
         waitForClickTimer = null;
-        handleTouch('start', 0, 0);
+        handleTouch('touchstart', 0, 0);
       }
 
-      handleTouch('move', dx, dy);
+      handleTouch('touchmove', dx, dy);
       return false;
     }
 
@@ -163,17 +163,17 @@ $(function() {
         waitForClickTimer = null;
         handleTouch('click');
       } else {
-        handleTouch('end', dx, dy);
+        handleTouch('touchend', dx, dy);
       }
 
       return false;
     }
 
     function handleTouch(type, dx, dy) {
-      if (type == 'start') {
+      if (type == 'touchstart') {
         prevDx = undefined;
         prevDy = undefined;
-      } else if (type == 'move' && dx === prevDx && dy === prevDy) {
+      } else if (type == 'touchmove' && dx === prevDx && dy === prevDy) {
         return;
       }
 
