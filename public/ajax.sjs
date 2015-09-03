@@ -121,9 +121,9 @@ function handleRequest(request, response)
 		case "keypress":
 			handleKeyboardEvent (event.key);
 			break;
-		case "start":
-		case "move":
-		case "end":
+		case "touchstart":
+		case "touchmove":
+		case "touchend":
 			handleTouchEvent (event);
 			break;
 	}
