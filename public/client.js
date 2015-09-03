@@ -30,7 +30,7 @@ $(function() {
 
   var protocols = {
     socket: new WebSocket('ws://localhost:8080/', 'echo-protocol'),
-    ajax: new AJAX('ajax.html')
+    ajax: new AJAX('ajax.sjs')
   };
 
   $.each(protocols, function(key, value) {
@@ -49,13 +49,32 @@ $(function() {
     protocol.send(new Date());
   });
 
-  $('#secKeyboard button').click(function(evt) {
+  $('#secKeyboard button').click(function() {
     var detail = {
       type: 'keypress',
       key: $(this).data('key')
     };
     console.log(detail);
     protocols[$('input[name="protocol"]:checked').val()].send(JSON.stringify(detail));
+    return false;
+  });
+
+  $('#secInput input').bind('change keyup input', function() {
+    var val = $(this).val();
+    $('#secInput button').prop('disabled', val == '');
+  }).triggerHandler('change');
+
+  $('#secInput button').click(function() {
+    var val = $('#secInput input').val();
+    if(val != '') {
+      var detail = {
+        type: 'input',
+        string: val
+      };
+      console.log(detail);
+      protocols[$('input[name="protocol"]:checked').val()].send(JSON.stringify(detail));
+    }
+    return false;
   });
 
   /////////////////////////////////////
