@@ -4,7 +4,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function simpleIME_callback(aTIP, aNotification)
   {
@@ -35,68 +35,68 @@ function simpleIME_callback(aTIP, aNotification)
 
 function handleTouchEvent (event)
 {
-	let type = 'navigator:browser';
-	let shell = Services.wm.getMostRecentWindow(type);
-	let document = shell.document;
-	let systemApp = document.getElementsByTagName("HTML:IFRAME")[0];
-	var domWindowUtils = shell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                     .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  let type = 'navigator:browser';
+  let shell = Services.wm.getMostRecentWindow(type);
+  let document = shell.document;
+  let systemApp = document.getElementsByTagName("HTML:IFRAME")[0];
+  var domWindowUtils = shell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                            .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
 
-	let etype;
-	switch (event.type) {
-		case "start":
-			etype = "mousedown";
-			break;
-		case "move":
-			etype = "mousemove";
-			break;
-		case "end":
-			etype = "mouseup";
-			break;
-		default:
-			return;
-	}
+  let etype;
+  switch (event.type) {
+    case "start":
+      etype = "mousedown";
+      break;
+    case "move":
+      etype = "mousemove";
+      break;
+    case "end":
+      etype = "mouseup";
+      break;
+    default:
+      return;
+  }
 
-	//etype = "contextmenu";
+  //etype = "contextmenu";
 
-	/*
-	var mouseEvent = document.createEvent ("MouseEvent");
-	mouseEvent.initMouseEvent (
-		etype,
-		true,
-		true,
-		shell,
-		0,
-		event.width,
-		event.height,
-		event.dx,
-		event.dy,
-		false,
-		false,
-		false,
-		false,
-		0,
-		null
-	);
-	//shell.dispatchEvent(mouseEvent);
-	var successed = domWindowUtils.dispatchDOMEventViaPresShell (systemApp, mouseEvent, true);
-	*/
-	domWindowUtils.sendMouseEvent (
-		etype,
-		event.dx,
-		event.dy,
-		0,
-		0,
-		0,
-		true
-	);
+  /*
+  var mouseEvent = document.createEvent ("MouseEvent");
+  mouseEvent.initMouseEvent (
+    etype,
+    true,
+    true,
+    shell,
+    0,
+    event.width,
+    event.height,
+    event.dx,
+    event.dy,
+    false,
+    false,
+    false,
+    false,
+    0,
+    null
+  );
+  //shell.dispatchEvent(mouseEvent);
+  var successed = domWindowUtils.dispatchDOMEventViaPresShell (systemApp, mouseEvent, true);
+  */
+  domWindowUtils.sendMouseEvent (
+    etype,
+    event.dx,
+    event.dy,
+    0,
+    0,
+    0,
+    true
+  );
 }
 
 function handleKeyboardEvent (keyCodeName)
 {
   const nsIDOMKeyEvent = Ci.nsIDOMKeyEvent;
-  let type = 'navigator:browser';
+  let type = "navigator:browser";
   let shell = Services.wm.getMostRecentWindow(type);
 
   var utils = shell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -111,20 +111,30 @@ function handleKeyboardEvent (keyCodeName)
 
 function handleRequest(request, response)
 {
-	response.setHeader("Content-Type", "text/html", false);
-	response.write(request.queryString);
+  var queryString = decodeURIComponent(request.queryString.replace(/\+/g, "%20"));
 
-	// Split JSON header "message="
-	var event = JSON.parse (decodeURIComponent(request.queryString.substring(8)));
+  response.setHeader("Content-Type", "text/html", false);
+  response.write(queryString);
 
-	switch (event.type) {
-		case "keypress":
-			handleKeyboardEvent (event.key);
-			break;
-		case "touchstart":
-		case "touchmove":
-		case "touchend":
-			handleTouchEvent (event);
-			break;
-	}
+  // Split JSON header "message="
+  var event = JSON.parse(queryString.substring(8));
+
+  switch (event.type) {
+    case "echo":
+      dump(event.detail + '\n');
+      break;
+    case "keypress":
+      handleKeyboardEvent(event.detail);
+      break;
+    case "touchstart":
+    case "touchmove":
+    case "touchend":
+    case "click":
+      //handleTouchEvent (event);
+      dump(JSON.stringify(event) + '\n');
+      break;
+    case "input":
+      dump(event.detail + '\n');
+      break;
+  }
 }

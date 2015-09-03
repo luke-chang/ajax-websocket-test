@@ -40,23 +40,30 @@ $(function() {
     };
   });
 
-  $('#btnEcho').click(function() {
+  function sendMessage(type, detail) {
     var protocol = protocols[$('input[name="protocol"]:checked').val()];
     if(protocol.readyState != 1) {
       console.log('ERROR: readyState=' + socket.readyState);
       return;
     }
-    protocol.send(new Date());
+
+    data = {
+      type: type,
+      detail: $.isPlainObject(detail) ? detail : detail.toString()
+    };
+
+    console.log(data);
+    protocol.send(JSON.stringify(data));
+  }
+
+  //////////////////////////////////////
+
+  $('#btnEcho').click(function() {
+    sendMessage('echo', new Date());
   });
 
   $('#secKeyboard button').click(function() {
-    var detail = {
-      type: 'keypress',
-      key: $(this).data('key')
-    };
-    console.log(detail);
-    protocols[$('input[name="protocol"]:checked').val()].send(JSON.stringify(detail));
-    return false;
+    sendMessage('keypress', $(this).data('key'));
   });
 
   $('#secInput input').bind('change keyup input', function() {
@@ -65,16 +72,7 @@ $(function() {
   }).triggerHandler('change');
 
   $('#secInput button').click(function() {
-    var val = $('#secInput input').val();
-    if(val != '') {
-      var detail = {
-        type: 'input',
-        string: val
-      };
-      console.log(detail);
-      protocols[$('input[name="protocol"]:checked').val()].send(JSON.stringify(detail));
-    }
-    return false;
+    sendMessage('input', $('#secInput input').val());
   });
 
   /////////////////////////////////////
@@ -199,16 +197,13 @@ $(function() {
       prevDx = dx;
       prevDy = dy;
 
-      var detail = {
-        type: type,
+      sendMessage(type, {
         dx: dx,
         dy: dy,
         width: panelWidth,
-        height: panelHeight
-      };
-
-      console.log(detail);
-      protocols[$('input[name="protocol"]:checked').val()].send(JSON.stringify(detail));
+        height: panelHeight,
+        timestamp: Date.now()
+      });
     }
   })();
 });
