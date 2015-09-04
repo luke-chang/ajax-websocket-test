@@ -7,6 +7,15 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const { SystemAppProxy } = Cu.import("resource://gre/modules/SystemAppProxy.jsm");
 
+const DEBUG = true;
+
+function debug (message)
+{
+  if (DEBUG) {
+    dump(message + '\n');
+  }
+}
+
 function handleClickEvent (event)
 {
   let type = 'navigator:browser';
@@ -91,6 +100,8 @@ function handleTouchEvent (event)
 
 function handleKeyboardEvent (keyCodeName)
 {
+  debug('key: ' + keyCodeName);
+
   const nsIDOMKeyEvent = Ci.nsIDOMKeyEvent;
   let type = "navigator:browser";
   let shell = Services.wm.getMostRecentWindow(type);
@@ -102,6 +113,40 @@ function handleKeyboardEvent (keyCodeName)
     var keyCode = nsIDOMKeyEvent[keyCodeName];
     var modifiers = 0;
     var happened = utils.sendKeyEvent(keyType, keyCode, 0, modifiers);
+  });
+}
+
+function handleInputEvent (detail)
+{
+  debug('input: ' + JSON.stringify(detail));
+
+  let sysApp = SystemAppProxy.getFrame().contentWindow;
+  let mozIM = sysApp.navigator.mozInputMethod;
+
+  mozIM.setActive(true);
+  mozIM.addEventListener('inputcontextchange', function icchangehandler() {
+    mozIM.removeEventListener('inputcontextchange', icchangehandler);
+
+    let inputcontext = mozIM.inputcontext;
+    if (inputcontext) {
+      debug(inputcontext.textAfterCursor);
+
+      if (detail.string) {
+        lengthBeforeCursor = inputcontext.textBeforeCursor.length;
+        lengthAfterCursor = inputcontext.textAfterCursor.length;
+        inputcontext.replaceSurroundingText(
+          detail.string,
+          -1 * lengthBeforeCursor,
+          lengthBeforeCursor + lengthAfterCursor
+        );
+      } else if (detail.keycode) {
+        inputcontext.sendKey(detail.keycode);
+      }
+    } else {
+      debug('ERROR: No inputcontext!');
+    }
+
+    mozIM.setActive(false);
   });
 }
 
@@ -117,7 +162,7 @@ function handleRequest(request, response)
 
   switch (event.type) {
     case "echo":
-      dump(event.detail + '\n');
+      debug(event.detail);
       break;
     case "keypress":
       handleKeyboardEvent(event.detail);
@@ -131,7 +176,7 @@ function handleRequest(request, response)
       handleClickEvent (event);
       break;
     case "input":
-      dump(event.detail + '\n');
+      handleInputEvent(event.detail);
       break;
   }
 }

@@ -72,7 +72,9 @@ $(function() {
   }).triggerHandler('change');
 
   $('#secInput button').click(function() {
-    sendMessage('input', $('#secInput input').val());
+    sendMessage('input', {
+      string: $('#secInput input').val()
+    });
   });
 
   /////////////////////////////////////
