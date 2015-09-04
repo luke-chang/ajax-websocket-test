@@ -16,8 +16,8 @@ function handleClickEvent (event)
   var domWindowUtils = shell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
-  var x = isNaN(getState("x")) ? shell.innerWidth/2 : parseInt(getState("x")); 
-  var y = isNaN(getState("y")) ? shell.innerHeight/2 : parseInt(getState("y")); 
+  var x = isNaN(getState("x")) ? shell.innerWidth/2 : parseInt(getState("x"));
+  var y = isNaN(getState("y")) ? shell.innerHeight/2 : parseInt(getState("y"));
 
   ["mousedown",  "mouseup"].forEach(function(mouseType) {
     domWindowUtils.sendMouseEvent (
@@ -41,10 +41,10 @@ function handleTouchEvent (event)
   var domWindowUtils = shell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
-             var x = isNaN(getState("x")) ? shell.innerWidth/2 : parseInt(getState("x")); 
-             var y = isNaN(getState("y")) ? shell.innerHeight/2 : parseInt(getState("y"));
-             var startX = 0;
-             var startY = 0;
+  var x = isNaN(getState("x")) ? shell.innerWidth/2 : parseInt(getState("x"));
+  var y = isNaN(getState("y")) ? shell.innerHeight/2 : parseInt(getState("y"));
+  var startX = 0;
+  var startY = 0;
 
   let etype;
   switch (event.type) {
@@ -69,8 +69,9 @@ function handleTouchEvent (event)
       return;
   }
 
-  x = startX + event.dx;
-  y = startY + event.dy;
+  let detail = event.detail;
+  x = startX + detail.dx;
+  y = startY + detail.dy;
 
   setState ("x", x.toString());
   setState ("y", y.toString());
@@ -85,7 +86,7 @@ function handleTouchEvent (event)
     true
   );
   // Use SystemAppProxy send
-  SystemAppProxy._sendCustomEvent('remote-control-event', { x: x, y: y }); 
+  SystemAppProxy._sendCustomEvent('remote-control-event', { x: x, y: y });
 }
 
 function handleKeyboardEvent (keyCodeName)
@@ -125,11 +126,9 @@ function handleRequest(request, response)
     case "touchmove":
     case "touchend":
       handleTouchEvent (event);
-      dump(JSON.stringify(event) + '\n');
       break;
     case "click":
       handleClickEvent (event);
-      dump(JSON.stringify(event) + '\n');
       break;
     case "input":
       dump(event.detail + '\n');
