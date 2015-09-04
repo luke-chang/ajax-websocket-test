@@ -5,33 +5,32 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+const { SystemAppProxy } = Cu.import("resource://gre/modules/SystemAppProxy.jsm");
 
-function simpleIME_callback(aTIP, aNotification)
-  {
-    try {
-      switch (aNotification.type) {
-        case "request-to-commit":
-          aTIP.commitComposition();
-          break;
-        case "request-to-cancel":
-          aTIP.cancelComposition();
-          break;
-        case "notify-focus":
-          this._hasFocus = true;
-          break;
-        case "notify-blur":
-          this._hasFocus = false;
-          break;
-        case "notify-detached":
-          this._hasFocus = false;
-          this._hasRightsToCompose = false;
-          break;
-      }
-      return true;
-    } catch (e) {
-      return false;
-    }
- }
+function handleClickEvent (event)
+{
+  let type = 'navigator:browser';
+  let shell = Services.wm.getMostRecentWindow(type);
+  let document = shell.document;
+  let systemApp = document.getElementsByTagName("HTML:IFRAME")[0];
+  var domWindowUtils = shell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                     .getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+  var x = isNaN(getState("x")) ? shell.innerWidth/2 : parseInt(getState("x")); 
+  var y = isNaN(getState("y")) ? shell.innerHeight/2 : parseInt(getState("y")); 
+
+  ["mousedown",  "mouseup"].forEach(function(mouseType) {
+    domWindowUtils.sendMouseEvent (
+      mouseType,
+      x,
+      y,
+      0,
+      0,
+      0,
+      true
+    );
+   });
+}
 
 function handleTouchEvent (event)
 {
@@ -40,57 +39,53 @@ function handleTouchEvent (event)
   let document = shell.document;
   let systemApp = document.getElementsByTagName("HTML:IFRAME")[0];
   var domWindowUtils = shell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                            .getInterface(Components.interfaces.nsIDOMWindowUtils);
+                     .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
+             var x = isNaN(getState("x")) ? shell.innerWidth/2 : parseInt(getState("x")); 
+             var y = isNaN(getState("y")) ? shell.innerHeight/2 : parseInt(getState("y"));
+             var startX = 0;
+             var startY = 0;
 
   let etype;
   switch (event.type) {
-    case "start":
+    case "touchstart":
       etype = "mousedown";
+      startX = x;
+      startY = y;
+      setState("startX", startX.toString());
+      setState("startY", startY.toString());
       break;
-    case "move":
+    case "touchmove":
       etype = "mousemove";
+      startX = parseInt(getState("startX"));
+      startY = parseInt(getState("startY"));
       break;
-    case "end":
+    case "touchend":
       etype = "mouseup";
+      startX = parseInt(getState("startX"));
+      startY = parseInt(getState("startY"));
       break;
     default:
       return;
   }
 
-  //etype = "contextmenu";
+  x = startX + event.dx;
+  y = startY + event.dy;
 
-  /*
-  var mouseEvent = document.createEvent ("MouseEvent");
-  mouseEvent.initMouseEvent (
-    etype,
-    true,
-    true,
-    shell,
-    0,
-    event.width,
-    event.height,
-    event.dx,
-    event.dy,
-    false,
-    false,
-    false,
-    false,
-    0,
-    null
-  );
-  //shell.dispatchEvent(mouseEvent);
-  var successed = domWindowUtils.dispatchDOMEventViaPresShell (systemApp, mouseEvent, true);
-  */
+  setState ("x", x.toString());
+  setState ("y", y.toString());
+
   domWindowUtils.sendMouseEvent (
     etype,
-    event.dx,
-    event.dy,
+    x,
+    y,
     0,
     0,
     0,
     true
   );
+  // Use SystemAppProxy send
+  SystemAppProxy._sendCustomEvent('remote-control-event', { x: x, y: y }); 
 }
 
 function handleKeyboardEvent (keyCodeName)
@@ -129,8 +124,11 @@ function handleRequest(request, response)
     case "touchstart":
     case "touchmove":
     case "touchend":
+      handleTouchEvent (event);
+      dump(JSON.stringify(event) + '\n');
+      break;
     case "click":
-      //handleTouchEvent (event);
+      handleClickEvent (event);
       dump(JSON.stringify(event) + '\n');
       break;
     case "input":
