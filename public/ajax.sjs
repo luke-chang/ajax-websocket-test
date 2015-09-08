@@ -133,15 +133,21 @@ function handleInputEvent (detail)
 
     let inputcontext = mozIM.inputcontext;
     if (inputcontext) {
-      if (detail.string) {
+      if (detail.clear) {
         lengthBeforeCursor = inputcontext.textBeforeCursor.length;
         lengthAfterCursor = inputcontext.textAfterCursor.length;
-        inputcontext.replaceSurroundingText(
-          detail.string,
+        inputcontext.deleteSurroundingText(
           -1 * lengthBeforeCursor,
           lengthBeforeCursor + lengthAfterCursor
         );
-      } else if (detail.keycode) {
+      }
+
+      if (detail.string) {
+        inputcontext.setComposition(detail.string);
+        inputcontext.endComposition(detail.string);
+      }
+
+      if (detail.keycode) {
         inputcontext.sendKey(detail.keycode);
       }
     } else {

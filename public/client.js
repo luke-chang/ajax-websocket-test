@@ -66,15 +66,33 @@ $(function() {
     sendMessage('keypress', $(this).data('key'));
   });
 
-  $('#secInput input').bind('change keyup input', function() {
-    var val = $(this).val();
-    $('#secInput button').prop('disabled', val == '');
-  }).triggerHandler('change');
+  $('#secInput input')
+    .bind('change keyup input', function() {
+      var val = $(this).val();
+      $('#sendString').prop('disabled', val == '');
+    })
+    .keydown(function(evt) {
+      if (evt.keyCode == 13) {
+        $('#sendString').triggerHandler('click');
+        return false;
+      }
+    })
+    .triggerHandler('change');
 
-  $('#secInput button').click(function() {
+  $('#sendString').click(function() {
+    var string = $('#secInput input').val();
     sendMessage('input', {
-      string: $('#secInput input').val()
+      clear: true,
+      string: string
     });
+    $('#secInput input').focus().val('').val(string);
+  });
+
+  $('#clearString').click(function() {
+    sendMessage('input', {
+      clear: true
+    });
+    $('#secInput input').focus().val('');
   });
 
   /////////////////////////////////////
