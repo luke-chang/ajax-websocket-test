@@ -122,15 +122,17 @@ function handleInputEvent (detail)
 
   let sysApp = SystemAppProxy.getFrame().contentWindow;
   let mozIM = sysApp.navigator.mozInputMethod;
+  let icChangeTimeout = null;
 
-  mozIM.setActive(true);
-  mozIM.addEventListener('inputcontextchange', function icchangehandler() {
-    mozIM.removeEventListener('inputcontextchange', icchangehandler);
+  function icChangeHandler() {
+    mozIM.removeEventListener('inputcontextchange', icChangeHandler);
+    if (icChangeTimeout) {
+      sysApp.clearTimeout(icChangeTimeout);
+      icChangeTimeout = null;
+    }
 
     let inputcontext = mozIM.inputcontext;
     if (inputcontext) {
-      debug(inputcontext.textAfterCursor);
-
       if (detail.string) {
         lengthBeforeCursor = inputcontext.textBeforeCursor.length;
         lengthAfterCursor = inputcontext.textAfterCursor.length;
@@ -147,7 +149,11 @@ function handleInputEvent (detail)
     }
 
     mozIM.setActive(false);
-  });
+  }
+
+  mozIM.setActive(true);
+  mozIM.addEventListener('inputcontextchange', icChangeHandler);
+  icChangeTimeout = sysApp.setTimeout(icChangeHandler, 1000);
 }
 
 function handleRequest(request, response)
