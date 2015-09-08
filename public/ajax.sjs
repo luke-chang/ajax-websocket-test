@@ -16,18 +16,17 @@ function handleClickEvent (event)
   var domWindowUtils = shell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
-  var x = isNaN(getState("x")) ? shell.innerWidth/2 : parseInt(getState("x"));
-  var y = isNaN(getState("y")) ? shell.innerHeight/2 : parseInt(getState("y"));
+  var x = isNaN(getState("x")) ? 0 : parseInt(getState("x"));
+  var y = isNaN(getState("y")) ? 0 : parseInt(getState("y"));
 
   ["mousedown",  "mouseup"].forEach(function(mouseType) {
     domWindowUtils.sendMouseEvent (
       mouseType,
-      x,
+      x, // On b2g-desktop, we should subtract diff from window to screen position
       y,
       0,
-      0,
-      0,
-      true
+      1,
+      0
     );
    });
 }
@@ -41,27 +40,20 @@ function handleTouchEvent (event)
   var domWindowUtils = shell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
-  var x = isNaN(getState("x")) ? shell.innerWidth/2 : parseInt(getState("x"));
-  var y = isNaN(getState("y")) ? shell.innerHeight/2 : parseInt(getState("y"));
+  var x = isNaN(getState("x")) ? 0 : parseInt(getState("x"));
+  var y = isNaN(getState("y")) ? 0 : parseInt(getState("y"));
   var startX = 0;
   var startY = 0;
 
-  let etype;
   switch (event.type) {
     case "touchstart":
-      etype = "mousedown";
       startX = x;
       startY = y;
       setState("startX", startX.toString());
       setState("startY", startY.toString());
       break;
     case "touchmove":
-      etype = "mousemove";
-      startX = parseInt(getState("startX"));
-      startY = parseInt(getState("startY"));
-      break;
     case "touchend":
-      etype = "mouseup";
       startX = parseInt(getState("startX"));
       startY = parseInt(getState("startY"));
       break;
@@ -76,15 +68,7 @@ function handleTouchEvent (event)
   setState ("x", x.toString());
   setState ("y", y.toString());
 
-  domWindowUtils.sendMouseEvent (
-    etype,
-    x,
-    y,
-    0,
-    0,
-    0,
-    true
-  );
+  domWindowUtils.sendNativeMouseEvent (x, y, 5, 0, systemApp);
   // Use SystemAppProxy send
   SystemAppProxy._sendCustomEvent('remote-control-event', { x: x, y: y });
 }
@@ -98,7 +82,7 @@ function handleKeyboardEvent (keyCodeName)
   var utils = shell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
-  ["keydown",  "keyup"].forEach(function(keyType) {
+  ["keydown",  "keypress", "keyup"].forEach(function(keyType) {
     var keyCode = nsIDOMKeyEvent[keyCodeName];
     var modifiers = 0;
     var happened = utils.sendKeyEvent(keyType, keyCode, 0, modifiers);
@@ -110,7 +94,7 @@ function handleRequest(request, response)
   var queryString = decodeURIComponent(request.queryString.replace(/\+/g, "%20"));
 
   response.setHeader("Content-Type", "text/html", false);
-  response.write(queryString);
+  //response.write(queryString);
 
   // Split JSON header "message="
   var event = JSON.parse(queryString.substring(8));
@@ -118,6 +102,7 @@ function handleRequest(request, response)
   switch (event.type) {
     case "echo":
       dump(event.detail + '\n');
+      response.write(queryString);
       break;
     case "keypress":
       handleKeyboardEvent(event.detail);
