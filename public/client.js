@@ -66,24 +66,45 @@ $(function() {
     sendMessage('keypress', $(this).data('key'));
   });
 
-  $('#secInput input').bind('change keyup input', function() {
-    var val = $(this).val();
-    $('#secInput button').prop('disabled', val == '');
-  }).triggerHandler('change');
+  $('#secInput input')
+    .bind('change keyup input', function() {
+      var val = $(this).val();
+      $('#sendString').prop('disabled', val == '');
+    })
+    .keydown(function(evt) {
+      if (evt.keyCode == 13) {
+        $('#sendString').triggerHandler('click');
+        return false;
+      }
+    })
+    .triggerHandler('change');
 
-  $('#secInput button').click(function() {
-    sendMessage('input', $('#secInput input').val());
+  $('#sendString').click(function() {
+    var string = $('#secInput input').val();
+    sendMessage('input', {
+      clear: true,
+      string: string
+    });
+    $('#secInput input').focus().val('').val(string);
+  });
+
+  $('#clearString').click(function() {
+    sendMessage('input', {
+      clear: true
+    });
+    $('#secInput input').focus().val('');
   });
 
   /////////////////////////////////////
 
   (function TouchPanel() {
-    var CLICK_TIME_THRESHOLD = 200;
+    var CLICK_TIME_THRESHOLD = 100;
     var CLICK_MOVE_THRESHOLD = 5;
 
     var waitForClickTimer, identifier;
     var startX, startY, panelX, panelY, panelWidth, panelHeight;
     var prevDx, prevDy, hasMouseDown;
+    var timer;
 
     $('#touchPanel')
       .mousedown(function(evt) {
@@ -186,24 +207,60 @@ $(function() {
       return false;
     }
 
+    var pendingEvent = null;
+
     function handleTouch(type, dx, dy) {
-      if (type == 'touchstart') {
-        prevDx = undefined;
-        prevDy = undefined;
-      } else if (type == 'touchmove' && dx === prevDx && dy === prevDy) {
-        return;
+      switch (type) {
+        case 'touchstart':
+          prevDx = undefined;
+          prevDy = undefined;
+
+          sendMessage(type, {
+            width: panelWidth,
+            height: panelHeight
+          });
+
+          timer = setInterval(function() {
+            if (pendingEvent) {
+              sendMessage(
+                pendingEvent.type,
+                pendingEvent.detail
+              );
+              pendingEvent = null;
+            }
+          }, 80);
+
+          break;
+        case 'touchmove':
+          if (dx === prevDx && dy === prevDy) {
+            return;
+          }
+
+          prevDx = dx;
+          prevDy = dy;
+
+          pendingEvent = {
+            type: type,
+            detail: {
+              dx: dx,
+              dy: dy
+            }
+          };
+
+          break;
+        case 'touchend':
+          clearInterval(timer);
+
+          sendMessage(type, {
+            dx: dx,
+            dy: dy
+          });
+
+          break;
+        case 'click':
+          sendMessage(type, {});
+          break;
       }
-
-      prevDx = dx;
-      prevDy = dy;
-
-      sendMessage(type, {
-        dx: dx,
-        dy: dy,
-        width: panelWidth,
-        height: panelHeight,
-        timestamp: Date.now()
-      });
     }
   })();
 });

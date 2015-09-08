@@ -7,6 +7,15 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const { SystemAppProxy } = Cu.import("resource://gre/modules/SystemAppProxy.jsm");
 
+const DEBUG = true;
+
+function debug (message)
+{
+  if (DEBUG) {
+    dump(message + '\n');
+  }
+}
+
 function handleClickEvent (event)
 {
   let type = 'navigator:browser';
@@ -62,8 +71,8 @@ function handleTouchEvent (event)
   }
 
   let detail = event.detail;
-  x = startX + detail.dx;
-  y = startY + detail.dy;
+  x = startX + detail.dx * 2;
+  y = startY + detail.dy * 2;
 
   setState ("x", x.toString());
   setState ("y", y.toString());
@@ -75,6 +84,8 @@ function handleTouchEvent (event)
 
 function handleKeyboardEvent (keyCodeName)
 {
+  debug('key: ' + keyCodeName);
+
   const nsIDOMKeyEvent = Ci.nsIDOMKeyEvent;
   let type = "navigator:browser";
   let shell = Services.wm.getMostRecentWindow(type);
@@ -89,6 +100,52 @@ function handleKeyboardEvent (keyCodeName)
   });
 }
 
+function handleInputEvent (detail)
+{
+  debug('input: ' + JSON.stringify(detail));
+
+  let sysApp = SystemAppProxy.getFrame().contentWindow;
+  let mozIM = sysApp.navigator.mozInputMethod;
+  let icChangeTimeout = null;
+
+  function icChangeHandler() {
+    mozIM.removeEventListener('inputcontextchange', icChangeHandler);
+    if (icChangeTimeout) {
+      sysApp.clearTimeout(icChangeTimeout);
+      icChangeTimeout = null;
+    }
+
+    let inputcontext = mozIM.inputcontext;
+    if (inputcontext) {
+      if (detail.clear) {
+        lengthBeforeCursor = inputcontext.textBeforeCursor.length;
+        lengthAfterCursor = inputcontext.textAfterCursor.length;
+        inputcontext.deleteSurroundingText(
+          -1 * lengthBeforeCursor,
+          lengthBeforeCursor + lengthAfterCursor
+        );
+      }
+
+      if (detail.string) {
+        inputcontext.setComposition(detail.string);
+        inputcontext.endComposition(detail.string);
+      }
+
+      if (detail.keycode) {
+        inputcontext.sendKey(detail.keycode);
+      }
+    } else {
+      debug('ERROR: No inputcontext!');
+    }
+
+    mozIM.setActive(false);
+  }
+
+  mozIM.setActive(true);
+  mozIM.addEventListener('inputcontextchange', icChangeHandler);
+  icChangeTimeout = sysApp.setTimeout(icChangeHandler, 1000);
+}
+
 function handleRequest(request, response)
 {
   var queryString = decodeURIComponent(request.queryString.replace(/\+/g, "%20"));
@@ -101,8 +158,7 @@ function handleRequest(request, response)
 
   switch (event.type) {
     case "echo":
-      dump(event.detail + '\n');
-      response.write(queryString);
+      debug(event.detail);
       break;
     case "keypress":
       handleKeyboardEvent(event.detail);
@@ -110,13 +166,15 @@ function handleRequest(request, response)
     case "touchstart":
     case "touchmove":
     case "touchend":
+      debug(JSON.stringify(event));
       handleTouchEvent (event);
       break;
     case "click":
+      debug(JSON.stringify(event));
       handleClickEvent (event);
       break;
     case "input":
-      dump(event.detail + '\n');
+      handleInputEvent(event.detail);
       break;
   }
 }
