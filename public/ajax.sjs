@@ -79,8 +79,8 @@ function handleTouchEvent (event)
   }
 
   let detail = event.detail;
-  x = startX + detail.dx;
-  y = startY + detail.dy;
+  x = startX + detail.dx * 2;
+  y = startY + detail.dy * 2;
 
   setState ("x", x.toString());
   setState ("y", y.toString());
@@ -182,9 +182,11 @@ function handleRequest(request, response)
     case "touchstart":
     case "touchmove":
     case "touchend":
+      debug(JSON.stringify(event));
       handleTouchEvent (event);
       break;
     case "click":
+      debug(JSON.stringify(event));
       handleClickEvent (event);
       break;
     case "input":
