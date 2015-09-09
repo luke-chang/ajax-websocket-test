@@ -66,18 +66,12 @@ $(function() {
     sendMessage('keypress', $(this).data('key'));
   });
 
-  $('#secInput input')
-    .bind('change keyup input', function() {
-      var val = $(this).val();
-      $('#sendString').prop('disabled', val == '');
-    })
-    .keydown(function(evt) {
-      if (evt.keyCode == 13) {
-        $('#sendString').triggerHandler('click');
-        return false;
-      }
-    })
-    .triggerHandler('change');
+  $('#secInput input').keydown(function(evt) {
+    if (evt.keyCode == 13) {
+      $('#sendString').triggerHandler('click');
+      return false;
+    }
+  });
 
   $('#sendString').click(function() {
     var string = $('#secInput input').val();
