@@ -140,13 +140,15 @@ $(function() {
         return onStart(touch.pageX - panelX, touch.pageY - panelY);
       })
       .bind('touchmove touchend', function(evt) {
-        var touches = evt.originalEvent.changedTouches;
-        var touch = Array.from(touches).find(function(elem) {
+        var touches = $.grep(evt.originalEvent.changedTouches, function(elem) {
           return elem.identifier == identifier;
         });
-        if (!touch) {
+
+        if (touches.length != 1) {
           return false;
         }
+
+        var touch = touches[0];
         if (evt.type == 'touchend') {
           identifier = undefined;
           return onEnd(touch.pageX - panelX, touch.pageY - panelY);
