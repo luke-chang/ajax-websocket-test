@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>AJAX and WebSocket Test</title>
+  <title>Remote Control Page</title>
   <script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
   <script src="client.js"></script>
   <style>
@@ -27,6 +27,10 @@
       font-size: 160%;
     }
 
+    #secProtocol {
+      display: none;
+    }
+
     #secTouchPanel {
       height: calc(100% - 190px);
     }
@@ -41,30 +45,40 @@
 
     button {
       font-size: 120%;
-      padding: 0.2em 7px;
+      padding: 0.3em 10px;
     }
 
     button::-moz-focus-inner {
-      padding: 0.2em 7px;
+      padding: 0.3em 10px;
     }
 
     #btnEcho {
       margin-left: 1em;
     }
 
-    #secKeyboard, #secInput {
-      text-align: center;
+    #secKeyboard div {
+      width: 250px;
+      margin: 0 auto 0.5em auto;
+      text-align: left;
+    }
+
+    button.invisible {
+      visibility: hidden;
+    }
+
+    button.right {
+      float: right;
     }
 
     #secInput input[type="text"] {
-      height: 1.8em;
-      width: calc(100% - 160px);
+      height: 2.1em;
+      width: calc(100% - 170px);
       font-size: 120%;
     }
   </style>
 </head>
 <body>
-  <h1>AJAX and WebSocket Test</h1>
+  <h1>Remote Control Page</h1>
 
   <section id="secProtocol">
     <label><input type="radio" name="protocol" value="ajax" checked> AJAX</label>
@@ -83,12 +97,18 @@
   </section>
 
   <section id="secKeyboard">
-    <button data-key="DOM_VK_HOME">&#8962;</button>
-    <button data-key="DOM_VK_UP">↑</button>
-    <button data-key="DOM_VK_DOWN">↓</button>
-    <button data-key="DOM_VK_LEFT">←</button>
-    <button data-key="DOM_VK_RIGHT">→</button>
-    <button data-key="DOM_VK_RETURN">&#9166;</button>
+    <div>
+      <button class="invisible">←</button>
+      <button data-key="DOM_VK_UP">↑</button>
+      <button class="invisible">→</button>
+      <button data-key="DOM_VK_HOME" class="right">&#8962;</button>
+    </div>
+    <div>
+      <button data-key="DOM_VK_LEFT">←</button>
+      <button data-key="DOM_VK_DOWN">↓</button>
+      <button data-key="DOM_VK_RIGHT">→</button>
+      <button data-key="DOM_VK_RETURN" class="right">&#9166;</button>
+    </div>
   </section>
 </body>
 </html>
