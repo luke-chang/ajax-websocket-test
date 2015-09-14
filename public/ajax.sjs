@@ -8,6 +8,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const { SystemAppProxy } = Cu.import("resource://gre/modules/SystemAppProxy.jsm");
 
 const DEBUG = true;
+const REMOTE_CONTROL_EVENT = 'remote-control-event';
 
 function debug (message)
 {
@@ -79,7 +80,12 @@ function handleTouchEvent (event)
 
   domWindowUtils.sendNativeMouseEvent (x, y, 5, 0, systemApp);
   // Use SystemAppProxy send
-  SystemAppProxy._sendCustomEvent('remote-control-event', { x: x, y: y });
+  SystemAppProxy._sendCustomEvent(REMOTE_CONTROL_EVENT, {
+    action: 'move-cursor',
+    state: event.type.substring(5),
+    x: x,
+    y: y
+  });
 }
 
 function handleKeyboardEvent (keyCodeName)
@@ -139,8 +145,16 @@ function handleInputEvent (detail)
     }
 
     mozIM.setActive(false);
+    SystemAppProxy._sendCustomEvent(REMOTE_CONTROL_EVENT, {
+      action: 'grant-input',
+      value: false
+    });
   }
 
+  SystemAppProxy._sendCustomEvent(REMOTE_CONTROL_EVENT, {
+    action: 'grant-input',
+    value: true
+  });
   mozIM.setActive(true);
   mozIM.addEventListener('inputcontextchange', icChangeHandler);
   icChangeTimeout = sysApp.setTimeout(icChangeHandler, 1000);
