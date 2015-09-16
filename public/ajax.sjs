@@ -30,14 +30,8 @@ function handleClickEvent (event)
   var y = isNaN(getState("y")) ? 0 : parseInt(getState("y"));
 
   ["mousedown",  "mouseup"].forEach(function(mouseType) {
-    domWindowUtils.sendMouseEvent (
-      mouseType,
-      x, // On b2g-desktop, we should subtract diff from window to screen position
-      y,
-      0,
-      1,
-      0
-    );
+    // On b2g-desktop, we should subtract diff from window to screen position
+    domWindowUtils.sendMouseEvent (mouseType, x, y, 0, 1, 0);
    });
 }
 
@@ -75,10 +69,16 @@ function handleTouchEvent (event)
   x = startX + detail.dx * 2;
   y = startY + detail.dy * 2;
 
+  x = x < 0 ? 0 : x;
+  x = x > shell.innerWidth ? shell.innerWidth : x;
+
+  y = y < 0 ? 0 : y;
+  y = y > shell.innerHeight ? shell.innerHeight : y;
+
   setState ("x", x.toString());
   setState ("y", y.toString());
 
-  domWindowUtils.sendNativeMouseEvent (x, y, 5, 0, systemApp);
+  domWindowUtils.sendMouseEvent ("mousemove", x, y, 0, 0, 0);
   // Use SystemAppProxy send
   SystemAppProxy._sendCustomEvent(REMOTE_CONTROL_EVENT, {
     action: 'move-cursor',
