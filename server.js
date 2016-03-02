@@ -6,16 +6,24 @@ var whitelist = [
   '/client.js'
 ];
 
-var http = require('http');
+var https = require('https');
 var urlparser = require('url');
 var fs = require('fs');
 var WebSocketServer = require('websocket').server;
+
+var options = {
+  key: fs.readFileSync('./key.pem'),
+  cert: fs.readFileSync('./cert.pem')
+};
 
 function onRequest(request, response) {
   var url = urlparser.parse(request.url, true);
 
   if(url.pathname == '/ajax.html') {
-    response.writeHead(200, {"Content-Type": "text/html"});
+    response.writeHead(200, {
+      "Content-Type": "text/html",
+      "Access-Control-Allow-Origin": "*"
+    });
     response.write(url.query.message);
   } else if(whitelist.indexOf(url.pathname) != -1 && fs.existsSync(public_dir + url.pathname)) {
     var file = fs.readFileSync(public_dir + url.pathname, {
@@ -34,7 +42,7 @@ function onRequest(request, response) {
   response.end();
 }
 
-var server = http.createServer(onRequest).listen(port);
+var server = https.createServer(options, onRequest).listen(port);
 
 wsServer = new WebSocketServer({
   httpServer: server,
